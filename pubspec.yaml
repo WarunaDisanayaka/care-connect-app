@@ -1,0 +1,70 @@
+name: careconnect_app
+description: "A new Flutter project."
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ✅ Firebase Core - Required for Firebase initialization
+  firebase_core: ^2.15.0
+
+  # ✅ Firebase Authentication - For user login/signup
+  firebase_auth: ^4.8.0
+
+  # ✅ Firebase Firestore - For storing user and medication data
+  cloud_firestore: ^4.9.0
+
+  # ✅ Firebase Storage - For profile image uploads
+  firebase_storage: ^11.2.7
+
+  # ✅ Image Picker - To allow users to pick profile pictures
+  image_picker: ^1.0.7
+
+  # ✅ Crypto - For password hashing
+  crypto: ^3.0.0
+
+  # ✅ Firebase Messaging - For push notifications
+  firebase_messaging: ^14.7.10
+
+  # ✅ Text-to-Speech - Voice assistant for reminders
+  flutter_tts: ^4.2.2
+
+  # ✅ State Management - Provider
+  provider: ^6.1.2
+
+  # ✅ Shared Preferences - Store user settings locally
+  shared_preferences: ^2.5.1
+
+  # ✅ HTTP - For API requests (if needed later)
+  http: ^1.2.1
+
+  flutter_local_notifications: ^19.0.0
+
+  timezone: ^0.10.0
+
+  android_intent_plus: ^4.0.0 # or the latest version
+
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # ✅ Linter for analyzing code
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/images/medicine.jpg
+    - assets/images/female_avatar.jpg
+    - assets/images/avatar.jpg

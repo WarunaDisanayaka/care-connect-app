@@ -1,0 +1,2 @@
+/Users/warunapradeep/Documents/careconnect_app/android/app/.cxx/Debug/5d3d2a14/arm64-v8a/CMakeFiles/edit_cache.dir
+/Users/warunapradeep/Documents/careconnect_app/android/app/.cxx/Debug/5d3d2a14/arm64-v8a/CMakeFiles/rebuild_cache.dir
