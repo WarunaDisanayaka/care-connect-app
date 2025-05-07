@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:careconnect_app/screens/family_member_home_screen.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +36,18 @@ class _FamilyLoginScreenState extends State<FamilyLoginScreen> {
 
       if (snapshot.docs.isNotEmpty) {
         DocumentSnapshot userDoc = snapshot.docs.first;
+        String parentUserPath = userDoc.reference.path.split('/family_members/').first;
+
+        // print(parentUserPath);
+        DocumentSnapshot parentUserDoc = await _firestore.doc(parentUserPath).get();
+        DocumentReference parentRef = userDoc.reference.parent.parent!;
+
+        final parentUserData = parentUserDoc.data() as Map<String, dynamic>;
+
+        print("Parent User Email (Document ID): ${parentRef.id}");
+        print("Parent User Condition: ${parentUserData['username']}");
+
+        print(userDoc['name']);
 
         // Get FCM token
         String? token = await FirebaseMessaging.instance.getToken();
@@ -49,7 +62,13 @@ class _FamilyLoginScreenState extends State<FamilyLoginScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => FamilyMemberHomeScreen(userData: {},),
+            builder: (context) => FamilyMemberHomeScreen(userData: {
+              'name': userDoc['name'],
+              'email': userDoc['email'],
+              'age': userDoc['age'],
+              'phone': userDoc['phone'],
+              'patientEmail':parentUserData['username']
+            },),
           ),
         );
 

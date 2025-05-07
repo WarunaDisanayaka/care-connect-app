@@ -1,5 +1,7 @@
+import 'package:careconnect_app/screens/family_member_home_screen.dart';
 import 'package:careconnect_app/services/notification_service.dart';
 import 'package:careconnect_app/services/permissions_helper.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -59,24 +61,22 @@ class CareConnectApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => MedicationService()),
         ChangeNotifierProvider(create: (context) => SettingsProvider()),
       ],
-      child: FutureBuilder(
-        future: Firebase.initializeApp(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return MaterialApp(
-            navigatorKey: navigatorKey, // 👈 HERE
-            title: 'Care Connect',
-            debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              primarySwatch: Colors.pink,
-              visualDensity: VisualDensity.adaptivePlatformDensity,
-            ),
-            home:  LoginScreen(),
-          );
-        },
+      child: MaterialApp(
+        navigatorKey: navigatorKey,
+        title: 'Care Connect',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.pink,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: FirebaseAuth.instance.currentUser == null
+            ? LoginScreen()
+            : FamilyMemberHomeScreen(userData: {
+          'name': FirebaseAuth.instance.currentUser?.displayName ?? 'User',
+          'email': FirebaseAuth.instance.currentUser?.email ?? 'user@example.com',
+        }),
       ),
+
     );
   }
 }

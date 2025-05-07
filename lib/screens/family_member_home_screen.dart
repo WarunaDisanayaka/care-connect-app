@@ -1,6 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/medication.dart';
+import '../services/medication_service.dart';
+import '../widgets/medication_card.dart';
 import 'family_member_screen.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
@@ -96,70 +100,121 @@ class _FamilyMemberHomeScreenState extends State<FamilyMemberHomeScreen> {
           ),
         ),
       ),
-      body: FutureBuilder<QuerySnapshot>(
-        future: FirebaseFirestore.instance.collection('users').get(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-
-          if (!snapshot.hasData) {
-            return Center(child: Text('No patients found'));
-          }
-
-          final users = snapshot.data!.docs;
-          List<Future<Map<String, dynamic>?>> futureChecks = users.map((doc) async {
-            final familyMembersSnapshot = await FirebaseFirestore.instance
-                .collection('users')
-                .doc(doc.id)
-                .collection('family_members')
-                .where('email', isEqualTo: widget.userData['email']) // Match by email!
-                .get();
-
-            if (familyMembersSnapshot.docs.isNotEmpty) {
-              return {
-                'name': doc['name'],
-                'email': doc['email'],
-                'age': doc['age'],
-                'condition': doc['condition'],
-              };
-            } else {
-              return null;
-            }
-          }).toList();
-
-          return FutureBuilder<List<Map<String, dynamic>?>>(
-            future: Future.wait(futureChecks),
-            builder: (context, patientsSnapshot) {
-              if (patientsSnapshot.connectionState == ConnectionState.waiting) {
+      body: Consumer<MedicationService>(
+        builder: (context, medicationService, child) {
+          return FutureBuilder<QuerySnapshot>(
+            future: FirebaseFirestore.instance.collection('users').get(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
               }
 
-              final validPatients = (patientsSnapshot.data ?? []).whereType<Map<String, dynamic>>().toList();
-
-              if (validPatients.isEmpty) {
-                return Center(child: Text('Welcome.'));
+              if (!snapshot.hasData) {
+                return Center(child: Text('No patients found'));
               }
 
-              return ListView.builder(
-                itemCount: validPatients.length,
-                itemBuilder: (context, index) {
-                  final patient = validPatients[index];
-                  return Card(
-                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: ListTile(
-                      leading: Icon(Icons.person, color: Colors.pink),
-                      title: Text(patient['name']),
-                      subtitle: Text("Email: ${patient['email']}\nCondition: ${patient['condition']}"),
-                    ),
+              final users = snapshot.data!.docs;
+              List<Future<Map<String, dynamic>?>> futureChecks = users.map((doc) async {
+                final familyMembersSnapshot = await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(doc.id)
+                    .collection('family_members')
+                    .where('email', isEqualTo: widget.userData['email'])
+                    .get();
+
+                if (familyMembersSnapshot.docs.isNotEmpty) {
+                  return {
+                    'name': doc['name'],
+                    'email': doc['email'],
+                    'age': doc['age'],
+                    'condition': doc['condition'],
+                  };
+                } else {
+                  return null;
+                }
+              }).toList();
+
+              return FutureBuilder<List<Map<String, dynamic>?>>(
+                future: Future.wait(futureChecks),
+                builder: (context, patientsSnapshot) {
+                  if (patientsSnapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+
+                  final validPatients = (patientsSnapshot.data ?? []).whereType<Map<String, dynamic>>().toList();
+
+                  return StreamBuilder<List<Medication>>(
+                    stream: medicationService.getMedications(widget.userData['patientEmail']),
+                    builder: (context, medSnapshot) {
+                      if (!medSnapshot.hasData) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+
+                      List<Medication> medications = medSnapshot.data!;
+                      String _sortOption = 'sort_by_name';
+
+                      if (_sortOption == 'sort_by_name') {
+                        medications.sort((a, b) => a.name.compareTo(b.name));
+                      } else if (_sortOption == 'sort_by_time') {
+                        medications.sort((a, b) => a.time.compareTo(b.time));
+                      }
+
+                      return ListView(
+                        padding: EdgeInsets.all(16),
+                        children: [
+                          if (validPatients.isEmpty)
+                            Center(child: Text('Your Patient Medication Schedule.'))
+                          else
+                            ...validPatients.map((patient) => Card(
+                              margin: EdgeInsets.symmetric(vertical: 8),
+                              child: ListTile(
+                                leading: Icon(Icons.person, color: Colors.pink),
+                                title: Text(patient['name']),
+                                subtitle: Text("Email: ${patient['email']}\nCondition: ${patient['condition']}"),
+                              ),
+                            )),
+                          SizedBox(height: 16),
+                          if (medications.isEmpty)
+                            Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(20.0),
+                                child: Text(
+                                  'No Medications Found',
+                                  style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            )
+                          else
+                            ...medications.map((medication) => MedicationCard(
+                              medication: medication,
+                              onDelete: () async {
+                                await medicationService.deleteMedication(medication.id);
+                              },
+                              onUpdate: (updatedMedication) async {
+                                await medicationService.updateMedication(
+                                  updatedMedication.id,
+                                  {
+                                    'medicationName': updatedMedication.name,
+                                    'dose': updatedMedication.dose,
+                                    'time': updatedMedication.time,
+                                    'date': Timestamp.fromDate(updatedMedication.date),
+                                  },
+                                );
+                                setState(() {});
+                              },
+                            )),
+                        ],
+                      );
+                    },
                   );
                 },
               );
             },
           );
-
         },
       ),
+
+
 
 
 

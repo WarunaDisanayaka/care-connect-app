@@ -91,10 +91,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
       medicationService.notifyListeners();
 
-      Navigator.pop(context, updatedData); // Pass the updated data back to the previous screen
+      // Navigator.pop(context, true); // Pass the updated data back to the previous screen
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Error: $e')));
     }
+
+    await medicationService.getMedications(widget.username);
 
 // Extract selected time from _timeController
     final timeParts = _timeController.text.split(' ');
