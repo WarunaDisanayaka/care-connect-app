@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../models/medication.dart';
 import '../services/medication_service.dart';
@@ -27,6 +30,45 @@ class _FamilyMemberHomeScreenState extends State<FamilyMemberHomeScreen> {
       onTap: onTap,
     );
   }
+
+  Timer? _medicationCheckTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _medicationCheckTimer = Timer.periodic(Duration(seconds: 10), (timer) async {
+      final medications = await context.read<MedicationService>().getMedicationsOnce(widget.userData['patientEmail']);
+      if (medications.isNotEmpty) {
+        await _sendSms(widget.userData['phone']);
+      }
+    });
+  }
+
+
+
+  Future<void> _sendSms(String? phoneNumber) async {
+    if (phoneNumber == null || phoneNumber.isEmpty) return;
+
+    final uri = Uri.parse('https://sender.zirconhost.com/api/v2/send.php');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: {
+        'user_id': '104684',
+        'api_key': '67d7i8mnkfdhfadsv',
+        'sender_id': 'My Demo sms',
+        'to': phoneNumber,
+        'message': 'Your patient has medications scheduled.',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      debugPrint("SMS sent successfully.");
+    } else {
+      debugPrint("Failed to send SMS: ${response.statusCode}");
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +113,10 @@ class _FamilyMemberHomeScreenState extends State<FamilyMemberHomeScreen> {
                     ),
                     Text(
                       widget.userData['email'] ?? "user@example.com",
+                      style: TextStyle(fontSize: 14, color: Colors.black54),
+                    ),
+                    Text(
+                      widget.userData['phone'] ?? "phone",
                       style: TextStyle(fontSize: 14, color: Colors.black54),
                     ),
                   ],
@@ -185,6 +231,13 @@ class _FamilyMemberHomeScreenState extends State<FamilyMemberHomeScreen> {
                               ),
                             )
                           else
+
+                            FutureBuilder(
+                              future: _sendSms(widget.userData['phone']),
+                              builder: (context, snapshot) {
+                                return SizedBox(); // placeholder widget
+                              },
+                            ),
                             ...medications.map((medication) => MedicationCard(
                               medication: medication,
                               onDelete: () async {

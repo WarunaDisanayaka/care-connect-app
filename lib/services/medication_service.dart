@@ -29,6 +29,7 @@ class MedicationService extends ChangeNotifier {
   // **Update Medication**
   Future<void> updateMedication(String documentId, Map<String, dynamic> updatedData) async {
     try {
+      print(updatedData);
       await _firestore.collection('medications').doc(documentId).update(updatedData);
       notifyListeners(); // **🔹 Refresh UI after updating**
     } catch (e) {
@@ -45,4 +46,23 @@ class MedicationService extends ChangeNotifier {
       print("Error deleting medication: $e");
     }
   }
+
+
+// 🔹 Add this to MedicationService
+  Future<List<Medication>> getMedicationsOnce(String username) async {
+    try {
+      final snapshot = await _firestore.collection('medications')
+          .where('username', isEqualTo: username)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => Medication.fromFirestore(doc.id, doc.data()))
+          .toList();
+    } catch (e) {
+      print("Error fetching medications once: $e");
+      return [];
+    }
+  }
+
 }
+

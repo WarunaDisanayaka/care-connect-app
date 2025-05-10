@@ -242,6 +242,8 @@ class _MedicationScreenState extends State<MedicationScreen> {
                                 'date': Timestamp.fromDate(updatedMedication.date),
                               },
                             );
+                            print("WIDGET USERNAME"+ widget.username);
+
                             setState(() {}); // Explicitly trigger a rebuild
                           },
                         );

@@ -72,6 +72,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
     final medicationService = Provider.of<MedicationService>(context, listen: false);
 
+    // In AddMedicineScreen (_saveMedicine)
+    print("Username when saving:"+ widget.username);
+
     final updatedData = {
       'username': widget.username,
       'medicationName': _medicationNameController.text.trim(),
@@ -79,6 +82,11 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       'time': _timeController.text.trim(),
       'date': Timestamp.fromDate(_selectedDate!),
     };
+
+    // In AddMedicineScreen (_saveMedicine)
+    print("Username when saving:"+ widget.username);
+
+// In MedicationService (update & add)
 
     try {
       if (widget.isEditing) {
@@ -91,7 +99,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
       medicationService.notifyListeners();
 
-      // Navigator.pop(context, true); // Pass the updated data back to the previous screen
+      Navigator.pop(context, true); // Pass the updated data back to the previous screen
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Error: $e')));
     }
